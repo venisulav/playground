@@ -60,7 +60,7 @@ export default function App(){
             }}/>
         <InputStatus status={fileStatus?.found} statusDescription={{
             name: "Server Resource",
-            errorText: "Resource not found",
+            errorText: "Not found",
             successText: `Found a ${fileStatus?.type}`,
             unknownText: "Waiting on valid URL"
         }}/>
