@@ -1,16 +1,19 @@
+import { GetResourceResponse } from "./ServerMock";
 
 export enum ActionType {
-    UPDATE_INPUT="UPDATE_INPUT"
+    UPDATE_INPUT = "UPDATE_INPUT",
+    SET_FETCH_RESPONSE = "UPDATE_FILE_STATUS"
 }
   
 export interface InputAction {
     type: ActionType;
-    payload: string;
+    payload: any;
 }
-  
+
 export interface InputState {
     url: string
-    valid: boolean | null
+    valid: boolean
+    fetchResponse: GetResourceResponse|null
 }
 
 /**
@@ -27,21 +30,28 @@ const isUrlValid = (value: string) => {
     return isValid;
 }
   
-  /**
-   * This reducer updates text input and its validity together.
-   * This avoids a race condition and also makes sure URL validation is
-   * done only once.
-   */
-  export function inputReducer(state: InputState, action: InputAction) {
-    const { type, payload } = action;
-    switch (type) {
-      case ActionType.UPDATE_INPUT:
+export function inputReducer(state: InputState, action: InputAction): InputState {
+  const { type, payload } = action;
+  switch (type) {
+    case ActionType.UPDATE_INPUT:
+      return {
+        url: payload,
+        valid: isUrlValid(payload),
+        fetchResponse: null
+      };
+    case ActionType.SET_FETCH_RESPONSE:{
+      const {url, fetchResponse} = payload
+      if (url === state.url){
         return {
-          ...state,
-          url: payload,
-          valid: isUrlValid(payload)
-        };
-      default:
+          ...state, 
+          fetchResponse
+        }
+      }else{
+        // ignore, because url(user input) has changed in the meantime 
         return state;
+      }
     }
+    default:
+      return state;
   }
+}
