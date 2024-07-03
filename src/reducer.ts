@@ -40,16 +40,10 @@ export function inputReducer(state: InputState, action: InputAction): InputState
         fetchResponse: null
       };
     case ActionType.SET_FETCH_RESPONSE:{
-      const {url, fetchResponse} = payload
-      if (url === state.url){
-        return {
+      return{
           ...state, 
-          fetchResponse
+          fetchResponse: payload
         }
-      }else{
-        // ignore, because url(user input) has changed in the meantime 
-        return state;
-      }
     }
     default:
       return state;

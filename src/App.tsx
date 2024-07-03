@@ -15,11 +15,6 @@ import { ActionType, inputReducer } from "./reducer";
  * Consequently, a request is sent to the backend(just a mock here)
  * with the most recent input value after the user
  * pauses for about 2 seconds.
- * 
- * There's a possible race condition if the url input changes
- * once the block inside setTimeout is already running and clearTimeout()
- * no longer cancels the server call. This is later resolved in the reducer by passing url
- * as part of the payload during that dispatch.
  */
 const API_CALLS_DELAY_MS = 2000;
 
@@ -28,22 +23,26 @@ export default function App(){
     const [inputState, dispatchInputState] = useReducer(inputReducer, {url:'', valid:false, fetchResponse: null});
 
     useEffect(() => {
+        /**
+         * This flag ensures we don't set a response for an outdated input.
+         * Clearing the timeout alone isn't enough.
+         */
+        let cancelled = false;
         const url = inputState.url;
         const valid = inputState.valid;
         const timeoutId = setTimeout(async () => {
-            /**
-             * We can no longer cancel the timeout once we reach here.
-             * We instead ignore the response in the reducer.
-             */
             if (valid === true){
                 console.log(`Invoking Server API:${url}`);
                 const fetchResponse = await fetchResourceInfo(url);
                 console.log(`Server Response:${JSON.stringify(fetchResponse)}`);
-                dispatchInputState({type:ActionType.SET_FETCH_RESPONSE, payload:{url: url, fetchResponse: fetchResponse}});
+                if (!cancelled){
+                    dispatchInputState({type:ActionType.SET_FETCH_RESPONSE, payload:fetchResponse });
+                }
             }
         }, API_CALLS_DELAY_MS);
         return () => {
-            clearTimeout(timeoutId)
+            clearTimeout(timeoutId);
+            cancelled = true;
         };
     }, [inputState.url, inputState.valid]);
   
